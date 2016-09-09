@@ -1,0 +1,77 @@
+<project default="all">
+
+	<target name="all" depends="exe" />
+	
+	<property name="version.number">1.0</property>
+	
+    <path id="compile.classpath">  
+        <fileset dir="lib">  
+            <include name="*.jar" />
+        </fileset>  
+    </path>
+	
+	<!--按照mapper定义的格式组合lib目录下面的所有jar文件，形成诸如lib/jar1.jar lib/jar2.jar的字符串-->  
+    <pathconvert property="libs" pathsep=" ">
+        <mapper> 
+            <chainedmapper>  
+                <!--过滤文件，将路径去掉，只保留文件名-->  
+                <flattenmapper />  
+            	<globmapper from="*" to="lib/*" />
+            </chainedmapper>  
+        </mapper>  
+        
+        <fileset dir="lib">  
+            <include name="*.jar" />  
+        </fileset>  
+    </pathconvert>
+	<target name="compile">
+		<mkdir dir="build" />
+		<mkdir dir="dist" />
+		<javac includeantruntime="false" debug="on" srcdir="websocket/src" destdir="build" target="1.8" />
+		
+		<javac includeantruntime="false" debug="on" srcdir="json"  destdir="build" target="1.8" />
+		
+		<jar destfile="lib/java_websocket_json.jar">
+			<fileset dir="build" includes="**/*.class" />
+		</jar>
+		
+		<javac includeantruntime="false" debug="on" srcdir="src"  destdir="dist" target="1.8" >
+			<classpath refid="compile.classpath" />  
+		</javac>
+	</target>
+	<target name="exe" depends="compile">
+		<tstamp/>
+		<jar destfile="dist/signal_server.jar">
+            <manifest>  
+            	<attribute name="Built-Date" value="${TODAY}"/>
+            	<attribute name="Implementation-Version" value="${version.number}"/>
+            	<attribute name="Main-Class" value="com.alipay.mp2p.signal.server.Server" />
+            	<attribute name="Class-Path" value="${libs}"/>  
+            </manifest>
+			<fileset dir="dist" includes="com/alipay/mp2p/signal/server/*.class" />
+			<fileset dir="dist" includes="com/alipay/mp2p/signal/util/*.class" />
+		</jar>
+	      <copy todir="dist/lib">  
+	        <fileset dir="lib"> 
+	          <include name="*.jar"/>
+	        </fileset> 
+	      </copy> 
+	      <copy todir="dist/conf">
+	        <fileset dir="conf"> 
+	          <include name="*.xml"/>
+	        </fileset>
+	      </copy>
+		<delete dir="dist/com" />
+	</target>
+
+	<target name="clean">
+		<delete dir="build" />
+		<delete dir="dist" />
+	</target>
+	  <!--
+		<target name="doc">
+			<delete dir="websocket/doc" />
+			<javadoc sourcepath="websocket/src" destdir="websocket/doc" />
+		</target>
+	 -->
+</project>
